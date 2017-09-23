@@ -1,4 +1,15 @@
-﻿using System.Collections;
+﻿/// <summary>
+/// keiStateMachine V 1.0
+/// Kei Lazu
+/// 
+/// Desc:
+/// State Machine Controller
+/// Input: keiSmartAutoController
+/// Output: Controlling State based on keiSmartAutoController
+/// 
+/// </summary>
+
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 

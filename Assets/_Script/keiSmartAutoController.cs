@@ -1,13 +1,32 @@
-﻿using System.Collections;
+﻿/// <summary>
+/// keiSmartAutoController V 1.1
+/// Kei Lazu
+/// 
+/// Desc:
+/// Controlling State here, or should i say, A.I. Controller
+/// 
+/// Changelog:
+/// 1.1 : Change the way State Machine was called
+/// 1.1 : Delay and get called by each state if the work for that state is finished (or you can say Behavior Tree State Machine)
+/// 
+/// </summary>
+
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using keiStateControlStuff;
 
 public class keiSmartAutoController : MonoBehaviour {
 
-    public bool keiSwitchState = false;
-    public float keiTimer;
-    public int keiSec = 0;
+    public int[] keiEnemyElemIntel = new int[9];
+    public int[] keiEnemyCountDownIntel = new int[9];
+
+    public int[] keiPlayerTypeResource = new int[5];
+    public int[] keiPlayerElemResource = new int[5];
+
+    public int keiDecisionAttack, keiDecisionAttackRow, keiDecisionAttackCol, keiDecisionAttackSlot;
+
+    public bool keiIsFinished;
 
     public keiStateMachine<keiSmartAutoController> keiStateMachine { get; set; }
 
@@ -15,29 +34,38 @@ public class keiSmartAutoController : MonoBehaviour {
     {
         keiStateMachine = new keiStateMachine<keiSmartAutoController>(this);
         keiStateMachine.keiChangeState(keiScanState.kei_getsetInstance);
-        keiTimer = Time.time;
-        
+        Invoke("keiChangingState()", 1f);
+
     }
 
-    private void Update()
+    public void keiChangingState()
     {
-        if (Time.time > keiTimer + 1)
+        if (keiIsFinished)
         {
-            keiTimer = Time.time;
-            keiSec++;
-            Debug.Log(keiSec);
+            StartCoroutine(keiPleaseWaitASec());
 
         }
 
-        if (keiSec == 3)
-        {
-            keiSec = 0;
-            keiSwitchState = !keiSwitchState;
+        CancelInvoke("keiChangingState()");
 
-        }
+    }
 
+    //public void keiIntelChecker()
+    //{
+    //    for (int i = 0; i < keiPlayerTypeResource.Length; i++)
+    //    {
+    //        Debug.Log("Pos: " + i + " || Type: " + keiPlayerTypeResource[i] + " || Element: " + keiPlayerElemResource[i]);
+
+    //    }
+
+    //}
+
+    IEnumerator keiPleaseWaitASec()
+    {
+        yield return new WaitForSeconds(1f);
         keiStateMachine.keiUpdate();
-        
+        StopCoroutine(keiPleaseWaitASec());
+
     }
 
 }
