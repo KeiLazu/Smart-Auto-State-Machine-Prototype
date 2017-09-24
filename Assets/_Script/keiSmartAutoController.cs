@@ -24,7 +24,8 @@ public class keiSmartAutoController : MonoBehaviour {
     public int[] keiPlayerTypeResource = new int[5];
     public int[] keiPlayerElemResource = new int[5];
 
-    public int keiDecisionAttack, keiDecisionAttackRow, keiDecisionAttackCol, keiDecisionAttackSlot;
+    public int keiDecisionAttackRow, keiDecisionAttackCol, keiDecisionAttackSlot;
+    public int keiDecisionAttack = 9;
 
     public bool keiIsFinished;
 
@@ -32,9 +33,15 @@ public class keiSmartAutoController : MonoBehaviour {
 
     private void Start()
     {
+        keiControlStateMachine();
+
+    }
+
+    public void keiControlStateMachine()
+    {
         keiStateMachine = new keiStateMachine<keiSmartAutoController>(this);
         keiStateMachine.keiChangeState(keiScanState.kei_getsetInstance);
-        Invoke("keiChangingState()", 1f);
+        Invoke("keiChangingState()", 2f);
 
     }
 

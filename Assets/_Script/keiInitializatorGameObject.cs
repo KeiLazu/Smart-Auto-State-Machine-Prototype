@@ -12,17 +12,18 @@ public class keiInitializatorGameObject : MonoBehaviour
     // Start Region: Init -------------------------------
     // Region: Pathfinder
     public GameObject keiLogSystem;
-
+    public GameObject keiWaveControlSystem;
     public GameObject keiEnemyPos;
     public GameObject keiPlayerResource;
 
     // Region: Image
     public Image keiEnemyA1, keiEnemyA2, keiEnemyA3,
         keiEnemyB1, keiEnemyB2, keiEnemyB3,
-        keiEnemyC1, keiEnemyC2, keiEnemyC3;
+        keiEnemyC1, keiEnemyC2, keiEnemyC3; // Enemy Coords
 
     // Region: Text
-    public Text keiLblLogState;
+    public Text keiLblLogState, keiLblLogAttack, keiLblLogSlot, keiLblLogCoords; // Logging State
+    public Text keiLblLogEnemyCount, keiLblLogWave;
 
     public Text keiEnemyCDA1, keiEnemyCDA2, keiEnemyCDA3,
         keiEnemyCDB1, keiEnemyCDB2, keiEnemyCDB3,
@@ -39,12 +40,24 @@ public class keiInitializatorGameObject : MonoBehaviour
         keiLogSystem = GameObject.FindGameObjectWithTag("keiLogSystem");
         keiEnemyPos = GameObject.FindGameObjectWithTag("keiEnemyPos");
         keiPlayerResource = GameObject.FindGameObjectWithTag("keiPlayerResource");
+        keiWaveControlSystem = GameObject.Find("keiWaveControlScript");
 
-        // Region: Text
-        keiLblLogState = keiLogSystem.transform.Find("keiLblLogState").GetComponent<Text>();
+        // Region: Logging
+        keiInitLogging(keiLogSystem);
 
         keiInitEnemy(keiEnemyPos);
         keiInitPlayerResource(keiPlayerResource);
+    }
+
+    private void keiInitLogging(GameObject kei_LogSystem)
+    {
+        keiLblLogState = kei_LogSystem.transform.Find("keiLblLogState").GetComponent<Text>();
+        keiLblLogAttack = kei_LogSystem.transform.Find("keiLblLogAttack").GetComponent<Text>();
+        keiLblLogSlot = kei_LogSystem.transform.Find("keiLblLogSlot").GetComponent<Text>();
+        keiLblLogCoords = kei_LogSystem.transform.Find("keiLblLogCoords").GetComponent<Text>();
+        keiLblLogEnemyCount = kei_LogSystem.transform.Find("keiLblLogEnemyCounter").GetComponent<Text>();
+        keiLblLogWave = kei_LogSystem.transform.Find("keiLblLogWave").GetComponent<Text>();
+
     }
 
     private void keiInitEnemy(GameObject kei_EnemyPos)

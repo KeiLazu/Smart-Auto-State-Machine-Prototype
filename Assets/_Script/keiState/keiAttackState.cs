@@ -1,5 +1,5 @@
 ﻿/// <summary>
-/// keiAttackState V1.0
+/// keiAttackState V1.1
 /// Kei Lazu
 /// 
 /// Desc:
@@ -7,6 +7,9 @@
 /// no output will be given in this state
 /// 
 /// - Fourth State
+/// 
+/// Changelog:
+/// 1.1 Now can attack based on priority calls
 /// 
 /// </summary>
 
@@ -85,6 +88,41 @@ public class keiAttackState : keiState<keiSmartAutoController> {
 
     }
 
+    public string keiDecisionAttackTranslator(keiSmartAutoController kei_SmartAuto)
+    {
+        if (kei_SmartAuto.keiDecisionAttack == 0)
+        {
+            return "Single Attack";
+
+        }
+        else if (kei_SmartAuto.keiDecisionAttack == 1)
+        {
+            return "Row Attack";
+
+        }
+        else if (kei_SmartAuto.keiDecisionAttack == 2)
+        {
+            return "Col Attack";
+
+        }
+        else if (kei_SmartAuto.keiDecisionAttack == 3)
+        {
+            return "X Attack";
+
+        }
+        else if (kei_SmartAuto.keiDecisionAttack == 4)
+        {
+            return "AoE Attack";
+
+        }
+        else
+        {
+            return "Not Attacking";
+
+        }
+
+    }
+
     public override void keiEnterState(keiSmartAutoController kei_Owner)
     {
         kei_Owner.keiIsFinished = false;
@@ -93,7 +131,7 @@ public class keiAttackState : keiState<keiSmartAutoController> {
 
         keiInitScript.keiLblLogState.GetComponent<Text>().text = "State: Attacking";
 
-        Debug.Log("Decision Attack: " + kei_Owner.keiDecisionAttack);
+        //Debug.Log("Decision Attack: " + keiDecisionAttackTranslator(kei_Owner));
 
         keiTranslateAttack(kei_Owner.keiDecisionAttack, kei_Owner.keiDecisionAttackRow, kei_Owner.keiDecisionAttackCol, kei_Owner);
 
@@ -103,7 +141,10 @@ public class keiAttackState : keiState<keiSmartAutoController> {
     {
         kei_Owner.keiIsFinished = false;
 
-        kei_Owner.keiDecisionAttack = 0;
+        kei_Owner.keiDecisionAttack = 9;
+        kei_Owner.keiDecisionAttackSlot = 0;
+        kei_Owner.keiDecisionAttackCol = 0;
+        kei_Owner.keiDecisionAttackRow = 0;
 
     }
 
@@ -112,6 +153,10 @@ public class keiAttackState : keiState<keiSmartAutoController> {
         if (kei_Owner.keiIsFinished)
         {
             kei_Owner.keiStateMachine.keiChangeState(keiScanState.kei_getsetInstance);
+            kei_Owner.keiDecisionAttack = 9;
+            kei_Owner.keiDecisionAttackSlot = 0;
+            kei_Owner.keiDecisionAttackCol = 0;
+            kei_Owner.keiDecisionAttackRow = 0;
 
         }
         
@@ -157,46 +202,36 @@ public class keiAttackState : keiState<keiSmartAutoController> {
                 switch (kei_DecisionRow)
                 {
                     case 0:
-                        keiEnemyPosition[0].color = Color.white;
-                        keiEnemyPosition[1].color = Color.white;
-                        keiEnemyPosition[2].color = Color.white;
+                        for (int i = 0; i < 3; i++)
+                        {
+                            keiEnemyPosition[i].color = Color.white;
+                            keiEnemyCooldown[i].text = "0";
+                            kei_SmartAuto.keiEnemyElemIntel[i] = 0;
 
-                        keiEnemyCooldown[0].text = "0";
-                        keiEnemyCooldown[1].text = "0";
-                        keiEnemyCooldown[2].text = "0";
-
-                        kei_SmartAuto.keiEnemyElemIntel[0] = 0;
-                        kei_SmartAuto.keiEnemyElemIntel[1] = 0;
-                        kei_SmartAuto.keiEnemyElemIntel[2] = 0;
+                        }
 
                         break;
 
                     case 1:
-                        keiEnemyPosition[3].color = Color.white;
-                        keiEnemyPosition[4].color = Color.white;
-                        keiEnemyPosition[5].color = Color.white;
+                        for (int i = 3; i < 6; i++)
+                        {
+                            keiEnemyPosition[i].color = Color.white;
+                            keiEnemyCooldown[i].text = "0";
+                            kei_SmartAuto.keiEnemyElemIntel[i] = 0;
 
-                        keiEnemyCooldown[3].text = "0";
-                        keiEnemyCooldown[4].text = "0";
-                        keiEnemyCooldown[5].text = "0";
+                        }
 
-                        kei_SmartAuto.keiEnemyElemIntel[3] = 0;
-                        kei_SmartAuto.keiEnemyElemIntel[4] = 0;
-                        kei_SmartAuto.keiEnemyElemIntel[5] = 0;
                         break;
 
                     case 2:
-                        keiEnemyPosition[6].color = Color.white;
-                        keiEnemyPosition[7].color = Color.white;
-                        keiEnemyPosition[8].color = Color.white;
+                        for (int i = 6; i < 9; i++)
+                        {
+                            keiEnemyPosition[i].color = Color.white;
+                            keiEnemyCooldown[i].text = "0";
+                            kei_SmartAuto.keiEnemyElemIntel[i] = 0;
 
-                        keiEnemyCooldown[6].text = "0";
-                        keiEnemyCooldown[7].text = "0";
-                        keiEnemyCooldown[8].text = "0";
+                        }
 
-                        kei_SmartAuto.keiEnemyElemIntel[6] = 0;
-                        kei_SmartAuto.keiEnemyElemIntel[7] = 0;
-                        kei_SmartAuto.keiEnemyElemIntel[8] = 0;
                         break;
                 }
 
@@ -206,45 +241,36 @@ public class keiAttackState : keiState<keiSmartAutoController> {
                 switch (kei_DecisionCol)
                 {
                     case 0:
-                        keiEnemyPosition[0].color = Color.white;
-                        keiEnemyPosition[3].color = Color.white;
-                        keiEnemyPosition[6].color = Color.white;
+                        for (int i = 0; i < 9; i += 3)
+                        {
+                            keiEnemyPosition[i].color = Color.white;
+                            keiEnemyCooldown[i].text = "0";
+                            kei_SmartAuto.keiEnemyElemIntel[i] = 0;
 
-                        keiEnemyCooldown[0].text = "0";
-                        keiEnemyCooldown[3].text = "0";
-                        keiEnemyCooldown[6].text = "0";
+                        }
 
-                        kei_SmartAuto.keiEnemyElemIntel[0] = 0;
-                        kei_SmartAuto.keiEnemyElemIntel[3] = 0;
-                        kei_SmartAuto.keiEnemyElemIntel[6] = 0;
                         break;
 
                     case 1:
-                        keiEnemyPosition[1].color = Color.white;
-                        keiEnemyPosition[4].color = Color.white;
-                        keiEnemyPosition[7].color = Color.white;
+                        for (int i = 1; i < 9; i += 3)
+                        {
+                            keiEnemyPosition[i].color = Color.white;
+                            keiEnemyCooldown[i].text = "0";
+                            kei_SmartAuto.keiEnemyElemIntel[i] = 0;
 
-                        keiEnemyCooldown[1].text = "0";
-                        keiEnemyCooldown[4].text = "0";
-                        keiEnemyCooldown[7].text = "0";
+                        }
 
-                        kei_SmartAuto.keiEnemyElemIntel[1] = 0;
-                        kei_SmartAuto.keiEnemyElemIntel[4] = 0;
-                        kei_SmartAuto.keiEnemyElemIntel[7] = 0;
                         break;
 
                     case 2:
-                        keiEnemyPosition[2].color = Color.white;
-                        keiEnemyPosition[5].color = Color.white;
-                        keiEnemyPosition[8].color = Color.white;
+                        for (int i = 2; i < 9; i += 3)
+                        {
+                            keiEnemyPosition[i].color = Color.white;
+                            keiEnemyCooldown[i].text = "0";
+                            kei_SmartAuto.keiEnemyElemIntel[i] = 0;
 
-                        keiEnemyCooldown[2].text = "0";
-                        keiEnemyCooldown[5].text = "0";
-                        keiEnemyCooldown[8].text = "0";
+                        }
 
-                        kei_SmartAuto.keiEnemyElemIntel[2] = 0;
-                        kei_SmartAuto.keiEnemyElemIntel[5] = 0;
-                        kei_SmartAuto.keiEnemyElemIntel[8] = 0;
                         break;
                 }
 
@@ -256,7 +282,7 @@ public class keiAttackState : keiState<keiSmartAutoController> {
                     keiEnemyPosition[i].color = Color.white;
                     keiEnemyCooldown[i].text = "0";
                     kei_SmartAuto.keiEnemyElemIntel[i] = 0;
-                    Debug.Log(i);
+                    //Debug.Log(i);
 
                 }
                 break;
@@ -276,6 +302,7 @@ public class keiAttackState : keiState<keiSmartAutoController> {
         }
 
         keiFinishAttacking(kei_SmartAuto);
+        keiAttackLogging(kei_DecisionAttack, kei_DecisionRow, kei_DecisionCol, keiInitScript, kei_SmartAuto);
 
     }
 
@@ -301,6 +328,16 @@ public class keiAttackState : keiState<keiSmartAutoController> {
 
         kei_SmartAuto.keiIsFinished = true;
         kei_SmartAuto.keiChangingState();
+
+    }
+
+    public void keiAttackLogging(int kei_DecisionAttack, int kei_DecisionRow, int kei_DecisionCol, keiInitializatorGameObject kei_Init, keiSmartAutoController kei_SmartAuto)
+    {
+        int keiSlotTranslator = kei_SmartAuto.keiDecisionAttackSlot + 1;
+
+        kei_Init.keiLblLogAttack.text = "Attack Type: " + keiDecisionAttackTranslator(kei_SmartAuto);
+        kei_Init.keiLblLogSlot.text = "Using Slot: " + keiSlotTranslator.ToString();
+        kei_Init.keiLblLogCoords.text = "In Coords: R - " + kei_DecisionRow.ToString() + " | C - " + kei_DecisionCol.ToString();
 
     }
 

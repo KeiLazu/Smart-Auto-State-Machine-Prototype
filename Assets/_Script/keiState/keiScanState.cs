@@ -59,10 +59,20 @@ public class keiScanState : keiState<keiSmartAutoController>
     // Region: Intel
     private Image[] keiPositionIntel = new Image[9];
 
+    // Region: Logging
+    private int keiEnemyCounted;
+
     // End Region: Init -----------------------------------------------
 
     public override void keiEnterState(keiSmartAutoController kei_Owner)
     {
+        kei_Owner.keiDecisionAttack = 9;
+        kei_Owner.keiDecisionAttackSlot = 0;
+        kei_Owner.keiDecisionAttackCol = 0;
+        kei_Owner.keiDecisionAttackRow = 0;
+
+        keiEnemyCounted = 0;
+
         keiIsEnemyStillAlive = false;
 
         keiInitScript = GameObject.Find("keiInitScript").GetComponent<keiInitializatorGameObject>();
@@ -90,7 +100,10 @@ public class keiScanState : keiState<keiSmartAutoController>
         }
         else
         {
-            //Debug.Log("Nope");
+            Debug.Log("Finish");
+            keiInitScript.keiLblLogState.GetComponent<Text>().text = "State: Finish";
+            GameObject.Find("keiWaveControlScript").GetComponent<keiWaveController>().keiNewWave();
+
             return;
 
         }
@@ -116,6 +129,8 @@ public class keiScanState : keiState<keiSmartAutoController>
 
     public void keiCheckElemEnemy(Image[] kei_PositionIntel, keiSmartAutoController kei_SmartAuto)
     {
+        keiEnemyCounted = 0;
+
         for (int i = 0; i < kei_PositionIntel.Length; i++)
         {
             if (kei_PositionIntel[i].color != Color.white)
@@ -126,6 +141,7 @@ public class keiScanState : keiState<keiSmartAutoController>
                     kei_SmartAuto.keiEnemyElemIntel[i] = 1;
                     kei_SmartAuto.keiEnemyCountDownIntel[i] = keiCheckTypeEnemy(kei_PositionIntel[i], kei_SmartAuto);
                     keiIsEnemyStillAlive = true;
+                    keiEnemyCounted++;
                     continue;
 
                 }
@@ -134,6 +150,7 @@ public class keiScanState : keiState<keiSmartAutoController>
                     kei_SmartAuto.keiEnemyElemIntel[i] = 2;
                     kei_SmartAuto.keiEnemyCountDownIntel[i] = keiCheckTypeEnemy(kei_PositionIntel[i], kei_SmartAuto);
                     keiIsEnemyStillAlive = true;
+                    keiEnemyCounted++;
                     continue;
 
                 }
@@ -142,6 +159,7 @@ public class keiScanState : keiState<keiSmartAutoController>
                     kei_SmartAuto.keiEnemyElemIntel[i] = 3;
                     kei_SmartAuto.keiEnemyCountDownIntel[i] = keiCheckTypeEnemy(kei_PositionIntel[i], kei_SmartAuto);
                     keiIsEnemyStillAlive = true;
+                    keiEnemyCounted++;
                     continue;
 
                 }
@@ -150,6 +168,7 @@ public class keiScanState : keiState<keiSmartAutoController>
                     kei_SmartAuto.keiEnemyElemIntel[i] = 4;
                     kei_SmartAuto.keiEnemyCountDownIntel[i] = keiCheckTypeEnemy(kei_PositionIntel[i], kei_SmartAuto);
                     keiIsEnemyStillAlive = true;
+                    keiEnemyCounted++;
                     continue;
 
                 }
@@ -158,6 +177,7 @@ public class keiScanState : keiState<keiSmartAutoController>
                     kei_SmartAuto.keiEnemyElemIntel[i] = 5;
                     kei_SmartAuto.keiEnemyCountDownIntel[i] = keiCheckTypeEnemy(kei_PositionIntel[i], kei_SmartAuto);
                     keiIsEnemyStillAlive = true;
+                    keiEnemyCounted++;
                     continue;
 
                 }
@@ -166,6 +186,7 @@ public class keiScanState : keiState<keiSmartAutoController>
                     kei_SmartAuto.keiEnemyElemIntel[i] = 6;
                     kei_SmartAuto.keiEnemyCountDownIntel[i] = keiCheckTypeEnemy(kei_PositionIntel[i], kei_SmartAuto);
                     keiIsEnemyStillAlive = true;
+                    keiEnemyCounted++;
                     continue;
 
                 }
@@ -183,6 +204,7 @@ public class keiScanState : keiState<keiSmartAutoController>
 
         //kei_SmartAuto.keiIntelChecker();
         kei_SmartAuto.keiIsFinished = true;
+        keiScanLogging(keiInitScript, kei_SmartAuto, keiEnemyCounted);
         kei_SmartAuto.keiChangingState();
 
     }
@@ -190,6 +212,12 @@ public class keiScanState : keiState<keiSmartAutoController>
     public int keiCheckTypeEnemy (Image kei_PositionIntelIndv, keiSmartAutoController kei_SmartAuto)
     {
         return int.Parse(kei_PositionIntelIndv.gameObject.transform.GetChild(0).GetComponent<Text>().text);
+
+    }
+
+    public void keiScanLogging(keiInitializatorGameObject kei_Init, keiSmartAutoController kei_SmartAuto, int kei_EnemyCounted)
+    {
+        kei_Init.keiLblLogEnemyCount.text = "Enemy Counted: " + kei_EnemyCounted.ToString();
 
     }
 

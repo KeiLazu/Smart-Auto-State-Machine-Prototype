@@ -1,5 +1,5 @@
 ﻿/// <summary>
-/// keiPrioritizeState V 1.1 
+/// keiPrioritizeState V 1.2
 /// Kei Lazu
 ///
 /// Desc: Prioritizing what coords need to be attacked first with resource we give Output will be
@@ -8,8 +8,16 @@
 /// - Third State
 /// 
 /// Changelog:
+/// 1.2 : Merit-Demerit System for AoE and X was implemented
+/// 1.2 : (Bug Removed) Stopped or Skipped after first attack
 /// 1.1 : Spatial Intelligence has been added
 /// 1.1 : Almost optimal in selecting slot for attacking
+/// 
+/// TODO:
+/// - Optimalization
+/// - Merit/Demerit System for Col and Row
+/// - Basic Priority + Element
+/// - Use other resource if suggestion is invalid
 /// 
 /// </summary>
 
@@ -58,14 +66,22 @@ public class keiPrioritizeState : keiState<keiSmartAutoController>
     int keiRowAMinimumCDCol, keiRowBMinimumCDCol, keiRowCMinimumCDCol; // selecting candidate primary col
     int keiPriorityRow; // selecting primary row
     int keiPriorityCol; // selecting primary col
-    int keiPriorityRowSum, keiPriorityColSum; // Check neighbor between primary row and col if not in X range
     int keiPrioritySlot; // selecting primary attack slot
+
+    // Region: Merit Demerit System
+    int keiMeritAoE, keiMeritX, keiDemeritAoE, keiDemeritX;
+    int keiMeritRow, keiMeritCol, keiDemeritRow, keiDemeritCol;
 
     // End Region: Init -----------------------------------------------
 
     public override void keiEnterState(keiSmartAutoController kei_Owner)
     {
         kei_Owner.keiIsFinished = false;
+
+        keiMeritAoE = 0;
+        keiMeritX = 0;
+        keiDemeritAoE = 0;
+        keiDemeritX = 0;
 
         keiInitScript = GameObject.Find("keiInitScript").GetComponent<keiInitializatorGameObject>();
 
@@ -94,32 +110,55 @@ public class keiPrioritizeState : keiState<keiSmartAutoController>
         keiSpatialIntelEnemyRow[1] = new int[3];
         keiSpatialIntelEnemyRow[2] = new int[3];
 
+        keiMeritAoE = 0;
+        keiMeritX = 0;
+        keiDemeritAoE = 0;
+        keiDemeritX = 0;
+
         // Region: Positioning
-        for (int i = 0; i < 3; i++)
+        for (int Col = 0; Col < 3; Col++)
         {
-            // first row
-            keiSpatialIntelEnemyRow[0][i] = kei_SmartAuto.keiEnemyElemIntel[i];
-            //Debug.Log("Row: A-" + keiSpatialIntelEnemyPos[0][i]);
+            for (int Row = 0; Row < 3; Row++)
+            {
+                // first row
+                keiSpatialIntelEnemyRow[Col][Row] = kei_SmartAuto.keiEnemyElemIntel[Row + (3 * Col)];
 
-            // and then second row
-            keiSpatialIntelEnemyRow[1][i] = kei_SmartAuto.keiEnemyElemIntel[i + 3];
-            //Debug.Log("Row: B-" + keiSpatialIntelEnemyPos[1][i]);
+                // Merit Demerit System
+                keiMeritDemeritSystemAoE(Row, Col, kei_SmartAuto);
 
-            // and then the last row
-            keiSpatialIntelEnemyRow[2][i] = kei_SmartAuto.keiEnemyElemIntel[i + 6];
-            //Debug.Log("Row: C-" + keiSpatialIntelEnemyPos[2][i]);
-
-            // output: (for easier reading)
-            //
-            // Col 0 Col 1 Col 2
-            //  []    []    []  - Row 0: A
-            //  []    []    []  - Row 1: B
-            //  []    []    []  - Row 2: C
-            //
+            }
 
         }
 
+        // output: (for easier reading)
+        //
+        // Col 0 Col 1 Col 2
+        //  []    []    []  - Row 0: A
+        //  []    []    []  - Row 1: B
+        //  []    []    []  - Row 2: C
+        //
+
+        keiMeritDemeritSystemX(kei_SmartAuto);
         keiPrioritizeCountDown(kei_SmartAuto);
+        //Debug.Log("Merit AoE: " + keiMeritAoE + " || Demerit AoE: " + keiDemeritAoE);
+        //Debug.Log("Merit X: " + keiMeritX + " || Demerit X: " + keiDemeritX);
+
+        // code below is deprecated
+        //for (int i = 0; i < 3; i++)
+        //{
+        //    // first row
+        //    keiSpatialIntelEnemyRow[0][i] = kei_SmartAuto.keiEnemyElemIntel[i];
+        //    //Debug.Log("Row: A-" + keiSpatialIntelEnemyPos[0][i]);
+
+        //    // and then second row
+        //    keiSpatialIntelEnemyRow[1][i] = kei_SmartAuto.keiEnemyElemIntel[i + 3];
+        //    //Debug.Log("Row: B-" + keiSpatialIntelEnemyPos[1][i]);
+
+        //    // and then the last row
+        //    keiSpatialIntelEnemyRow[2][i] = kei_SmartAuto.keiEnemyElemIntel[i + 6];
+        //    //Debug.Log("Row: C-" + keiSpatialIntelEnemyPos[2][i]);
+
+        //}
 
     }
 
@@ -235,61 +274,196 @@ public class keiPrioritizeState : keiState<keiSmartAutoController>
 
     }
 
-    public void keiCheckNeighborFromPrimaryPriority(int kei_Row, int kei_Col, keiSmartAutoController kei_SmartAuto)
+    public void keiMeritDemeritSystemX(keiSmartAutoController kei_SmartAuto)
     {
-        goto AoEXAttack;
-
-        AoEXAttack:
-        // AoE need Merit/Demerit System, so i'll lump this with X for this time being
-        if (((kei_Row == 0 || kei_Row == 2) && (kei_Col == 0 || kei_Col == 2)) || (kei_Row == 1 && kei_Col == 1))
+        for (int i = 0; i < kei_SmartAuto.keiEnemyElemIntel.Length; i += 2)
         {
-            //Debug.Log("Suggest X or AoE");
-            for (int i = 0; i < kei_SmartAuto.keiPlayerTypeResource.Length; i++)
+            if (kei_SmartAuto.keiEnemyElemIntel[i] > 0)
             {
-                if (kei_SmartAuto.keiPlayerTypeResource[i] == 4)
+                keiMeritX++;
+
+            }
+            else
+            {
+                keiDemeritX++;
+
+            }
+
+        }
+
+    }
+
+    public void keiMeritDemeritSystemAoE(int kei_Row, int kei_Col, keiSmartAutoController kei_SmartAuto)
+    {
+        // Check merit AoE
+        if (kei_SmartAuto.keiEnemyElemIntel[kei_Row + (3 * kei_Col)] > 0)
+        {
+            keiMeritAoE++;
+
+        }
+        else
+        {
+            keiDemeritAoE++;
+
+        }
+
+    }
+
+    public void keiAoEXSuggestion(int kei_Row, int kei_Col, keiSmartAutoController kei_SmartAuto)
+    {
+        //Debug.Log("AoEX Active");
+        //if (((kei_Row == 0 || kei_Row == 2) && (kei_Col == 0 || kei_Col == 2)) || (kei_Row == 1 && kei_Col == 1))
+
+        for (int i = 0; i < kei_SmartAuto.keiPlayerTypeResource.Length; i++)
+        {
+            if (kei_SmartAuto.keiPlayerTypeResource[i] == 4 && kei_SmartAuto.keiDecisionAttack == 9)
+            {
+                if (keiMeritAoE > keiDemeritAoE)
                 {
+                    Debug.Log("AoE In");
                     kei_SmartAuto.keiDecisionAttack = 4;
                     kei_SmartAuto.keiDecisionAttackSlot = i;
                     keiPrepareAttack(kei_SmartAuto);
-                    //Debug.Log("Suggest AoE");
-                    break;
-
-                }
-                else if (kei_SmartAuto.keiPlayerTypeResource[i] == 3)
-                {
-                    kei_SmartAuto.keiDecisionAttack = 3;
-                    kei_SmartAuto.keiDecisionAttackSlot = i;
-                    keiPrepareAttack(kei_SmartAuto);
-                    //Debug.Log("Suggest X");
                     break;
 
                 }
                 else
                 {
-                    continue;
+                    break;
+
+                }
+
+            }
+            else
+            {
+                continue;
+
+            }
+
+        }
+
+        //if (keiMeritAoE > keiDemeritAoE)
+        //{
+        //    //Debug.Log("Suggest X or AoE");
+        //    for (int i = 0; i < kei_SmartAuto.keiPlayerTypeResource.Length; i++)
+        //    {
+
+        //        if (kei_SmartAuto.keiPlayerTypeResource[i] == 4 && kei_SmartAuto.keiDecisionAttack == 9)
+        //        {
+        //            kei_SmartAuto.keiDecisionAttack = 4;
+        //            kei_SmartAuto.keiDecisionAttackSlot = i;
+        //            keiPrepareAttack(kei_SmartAuto);
+        //            //Debug.Log("Suggest AoE");
+        //            break;
+
+        //        }
+        //        //else if (kei_SmartAuto.keiPlayerTypeResource[i] == 3 && kei_SmartAuto.keiDecisionAttack == 9)
+        //        //{
+        //        //    kei_SmartAuto.keiDecisionAttack = 3;
+        //        //    kei_SmartAuto.keiDecisionAttackSlot = i;
+        //        //    keiPrepareAttack(kei_SmartAuto);
+        //        //    //Debug.Log("Suggest X");
+        //        //    break;
+
+        //        //}
+
+        //        Debug.Log("For AoEX Active");
+
+        //    }
+
+        //    Debug.Log("If AoEX Active");
+
+        //}
+
+        if (((kei_Row == 0 || kei_Row == 2) || (kei_Col == 0 || kei_Col == 2)) || (kei_Row == 1 && kei_Col == 1))
+        {
+            for (int i = 0; i < kei_SmartAuto.keiPlayerTypeResource.Length; i++)
+            {
+                if (kei_SmartAuto.keiPlayerTypeResource[i] == 3 && kei_SmartAuto.keiDecisionAttack == 9)
+                {
+                    if (keiMeritX > keiDemeritX)
+                    {
+                        kei_SmartAuto.keiDecisionAttack = 3;
+                        kei_SmartAuto.keiDecisionAttackSlot = i;
+                        keiPrepareAttack(kei_SmartAuto);
+                        Debug.Log("Suggest X");
+                        break;
+
+                    }
+                    else
+                    {
+                        continue;
+
+                    }
 
                 }
 
             }
 
         }
-        else
+
+        
+
+        //if ((keiMeritX > keiDemeritX) && ((kei_Row == 0 || kei_Row == 2) && (kei_Col == 0 || kei_Col == 2)) || (kei_Row == 1 && kei_Col == 1))
+        //{
+        //    Debug.Log("Else If X Active");
+
+        //    for (int i = 0; i < kei_SmartAuto.keiPlayerTypeResource.Length; i++)
+        //    {
+        //        if (kei_SmartAuto.keiPlayerTypeResource[i] == 3 && kei_SmartAuto.keiDecisionAttack == 9)
+        //        {
+        //            kei_SmartAuto.keiDecisionAttack = 3;
+        //            kei_SmartAuto.keiDecisionAttackSlot = i;
+        //            keiPrepareAttack(kei_SmartAuto);
+        //            Debug.Log("Suggest X");
+        //            break;
+
+        //        }
+        //        else { continue; }
+
+        //    }
+
+        //}
+        
+        if (kei_SmartAuto.keiDecisionAttack == 9)
         {
-            goto RowColAttack;
+            Debug.Log("Run to RowColSuggestion");
+            keiRowColSuggestion(kei_Row, kei_Col, kei_SmartAuto);
+
         }
 
-        RowColAttack: // keiSpatialIntelEnemyRow[Row][Col]
+    }
+
+    public void keiRowColSuggestion(int kei_Row, int kei_Col, keiSmartAutoController kei_SmartAuto)
+    {
+        keiMeritCol = 0;
+        keiMeritRow = 0;
+        keiDemeritCol = 0;
+        keiDemeritRow = 0;
+
+        //Debug.Log("keiRowColSuggestion Active");
         for (int i = 0; i < keiSpatialIntelEnemyRow.Length; i++)
         {
+            //Debug.Log("keiRowCol For Active");
             if (keiSpatialIntelEnemyRow[i][kei_Col] > 0)
             {
-                keiPriorityColSum++;
+                keiMeritCol++;
+
+            }
+            else
+            {
+                keiDemeritCol++;
 
             }
 
             if (keiSpatialIntelEnemyRow[kei_Row][i] > 0)
             {
-                keiPriorityRowSum++;
+                keiMeritRow++;
+
+            }
+            else
+            {
+                keiDemeritRow++;
 
             }
 
@@ -297,17 +471,14 @@ public class keiPrioritizeState : keiState<keiSmartAutoController>
 
         //Debug.Log("Col Sum: " + keiPriorityColSum + " || Row Sum: " + keiPriorityRowSum);
 
-        if (keiPriorityColSum > 1)
+        if (keiMeritCol > keiDemeritCol && kei_SmartAuto.keiDecisionAttack == 9)
         {
-
+            //Debug.Log("If Priority Col Active");
             for (int i = 0; i < kei_SmartAuto.keiPlayerTypeResource.Length; i++)
             {
-                if (kei_SmartAuto.keiPlayerTypeResource[i] != 2)
-                {
-                    continue;
+                //Debug.Log("For in If Priority Col Active");
 
-                }
-                else
+                if (kei_SmartAuto.keiPlayerTypeResource[i] == 2)
                 {
                     //Debug.Log("Suggest Col Attack");
                     kei_SmartAuto.keiDecisionAttack = 2;
@@ -316,21 +487,22 @@ public class keiPrioritizeState : keiState<keiSmartAutoController>
                     break;
 
                 }
+                //else
+                //{
+                //    Debug.Log("Continue For");
+                //    continue;
+                //}
 
             }
 
         }
-        else if (keiPriorityRowSum > 1)
-        {
 
+        if (keiMeritRow > keiDemeritRow && kei_SmartAuto.keiDecisionAttack == 9)
+        {
+            //Debug.Log("Else if Priority Row Sum");
             for (int i = 0; i < kei_SmartAuto.keiPlayerTypeResource.Length; i++)
             {
-                if (kei_SmartAuto.keiPlayerTypeResource[i] != 1)
-                {
-                    continue;
-
-                }
-                else
+                if (kei_SmartAuto.keiPlayerTypeResource[i] == 1)
                 {
                     //Debug.Log("Suggest Row Attack");
                     kei_SmartAuto.keiDecisionAttack = 1;
@@ -343,32 +515,54 @@ public class keiPrioritizeState : keiState<keiSmartAutoController>
             }
 
         }
-        else
+
+        if (kei_SmartAuto.keiDecisionAttack == 9)
         {
-            goto SingleAttack;
+            //Debug.Log("Else Run To Single");
+            keiSingleSuggestion(kei_SmartAuto);
         }
 
-        SingleAttack:
+    }
+
+    public void keiSingleSuggestion(keiSmartAutoController kei_SmartAuto)
+    {
+        //Debug.Log("keiSingle Active");
+
         for (int i = 0; i < kei_SmartAuto.keiPlayerTypeResource.Length; i++)
         {
-            if (kei_SmartAuto.keiPlayerTypeResource[i] != 0)
-            {
-                // not attacking
-                //Debug.Log("Not Attacking");
-                kei_SmartAuto.keiDecisionAttack = 9;
+            //Debug.Log("For Single Active");
 
-            }
-            else
+            if (kei_SmartAuto.keiPlayerTypeResource[i] == 0 && kei_SmartAuto.keiDecisionAttack == 9)
             {
                 //Debug.Log("Suggest Single Attack");
                 kei_SmartAuto.keiDecisionAttack = 0;
-                kei_SmartAuto.keiDecisionAttackSlot = 0;
-                keiPrepareAttack(kei_SmartAuto);
+                kei_SmartAuto.keiDecisionAttackSlot = i;
                 break;
 
             }
 
+            //Debug.Log(kei_SmartAuto.keiDecisionAttack + " " + kei_SmartAuto.keiDecisionAttackSlot);
+
         }
+
+        if (kei_SmartAuto.keiDecisionAttack == 9)
+        {
+
+            // not attacking
+            Debug.Log("Not Attacking");
+            kei_SmartAuto.keiDecisionAttack = 9;
+
+        }
+
+        keiPrepareAttack(kei_SmartAuto);
+
+    }
+
+    public void keiCheckNeighborFromPrimaryPriority(int kei_Row, int kei_Col, keiSmartAutoController kei_SmartAuto)
+    {
+        // AoE need Merit/Demerit System, so i'll lump this with X for this time being
+        //Debug.Log("keiCheckNeighbor Active || Row: " + kei_Row + " || Col: " + kei_Col);
+        keiAoEXSuggestion(kei_Row, kei_Col, kei_SmartAuto);
 
     }
 
