@@ -1,11 +1,12 @@
 ﻿/// <summary>
-/// keiSmartAutoController V 1.1
+/// keiSmartAutoController V 1.2
 /// Kei Lazu
 /// 
 /// Desc:
 /// Controlling State here, or should i say, A.I. Controller
 /// 
 /// Changelog:
+/// 1.2 : Change Enemy Intel into Jagged Array
 /// 1.1 : Change the way State Machine was called
 /// 1.1 : Delay and get called by each state if the work for that state is finished (or you can say Behavior Tree State Machine)
 /// 
@@ -18,11 +19,14 @@ using keiStateControlStuff;
 
 public class keiSmartAutoController : MonoBehaviour {
 
-    public int[] keiEnemyElemIntel = new int[9];
-    public int[] keiEnemyCountDownIntel = new int[9];
+    public int[][][] keiEnemyIntel = new int[3][][];
+    public int[][] keiPlayerResource = new int[5][];
 
-    public int[] keiPlayerTypeResource = new int[5];
-    public int[] keiPlayerElemResource = new int[5];
+    public int[] keiEnemyElemIntel = new int[9]; // change scan and attack state
+    public int[] keiEnemyCountDownIntel = new int[9]; // change scan and attack state
+
+    //public int[] keiPlayerTypeResource = new int[5]; // change resource state
+    //public int[] keiPlayerElemResource = new int[5]; // change resource state
 
     public int keiDecisionAttackRow, keiDecisionAttackCol, keiDecisionAttackSlot;
     public int keiDecisionAttack = 9;
@@ -30,6 +34,34 @@ public class keiSmartAutoController : MonoBehaviour {
     public bool keiIsFinished;
 
     public keiStateMachine<keiSmartAutoController> keiStateMachine { get; set; }
+
+    private void Awake()
+    {
+        // Region: Init Enemy
+        keiEnemyIntel[0] = new int[3][];
+        keiEnemyIntel[1] = new int[3][];
+        keiEnemyIntel[2] = new int[3][];
+
+        keiEnemyIntel[0][0] = new int[2];
+        keiEnemyIntel[0][1] = new int[2];
+        keiEnemyIntel[0][2] = new int[2];
+
+        keiEnemyIntel[1][0] = new int[2];
+        keiEnemyIntel[1][1] = new int[2];
+        keiEnemyIntel[1][2] = new int[2];
+
+        keiEnemyIntel[2][0] = new int[2];
+        keiEnemyIntel[2][1] = new int[2];
+        keiEnemyIntel[2][2] = new int[2];
+
+        // Region: Init Resources
+        keiPlayerResource[0] = new int[2];
+        keiPlayerResource[1] = new int[2];
+        keiPlayerResource[2] = new int[2];
+        keiPlayerResource[3] = new int[2];
+        keiPlayerResource[4] = new int[2];
+
+    }
 
     private void Start()
     {

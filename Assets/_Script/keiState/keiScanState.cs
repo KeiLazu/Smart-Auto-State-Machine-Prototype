@@ -1,5 +1,5 @@
 ﻿/// <summary>
-/// keiScanState V 1.1
+/// keiScanState V 1.2
 /// Kei Lazu
 /// 
 /// Desc:
@@ -10,6 +10,7 @@
 /// - First State
 /// 
 /// Changelog:
+/// 1.2 : Change the way AI scan using jagged array
 /// 1.1 : added keiIsFinished as trigger to the next state
 /// 1.1 : now can Scan enemy entirely with their countdown to attack also their element
 /// 
@@ -57,12 +58,20 @@ public class keiScanState : keiState<keiSmartAutoController>
     private GameObject keiEnemyPos;
 
     // Region: Intel
-    private Image[] keiPositionIntel = new Image[9];
+    private Image[][] keiPositionIntel = new Image[3][];
 
     // Region: Logging
     private int keiEnemyCounted;
 
     // End Region: Init -----------------------------------------------
+
+    public void keiInitArray()
+    {
+        keiPositionIntel[0] = new Image[3];
+        keiPositionIntel[1] = new Image[3];
+        keiPositionIntel[2] = new Image[3];
+
+    }
 
     public override void keiEnterState(keiSmartAutoController kei_Owner)
     {
@@ -79,6 +88,8 @@ public class keiScanState : keiState<keiSmartAutoController>
         keiEnemyPos = GameObject.FindGameObjectWithTag("keiEnemyPos");
 
         keiInitScript.keiLblLogState.GetComponent<Text>().text = "State: Scanning";
+
+        keiInitArray();
 
         keiPopulatingPosition(keiEnemyPos, kei_Owner);
 
@@ -110,97 +121,164 @@ public class keiScanState : keiState<keiSmartAutoController>
     }
 
     public void keiPopulatingPosition(GameObject kei_EnemyPos, keiSmartAutoController kei_SmartAuto)
-    {        
-        keiPositionIntel[0] = kei_EnemyPos.transform.Find("keiEnemyA1").GetComponent<Image>();
-        keiPositionIntel[1] = kei_EnemyPos.transform.Find("keiEnemyA2").GetComponent<Image>();
-        keiPositionIntel[2] = kei_EnemyPos.transform.Find("keiEnemyA3").GetComponent<Image>();
+    {
+        keiPositionIntel[0][0] = kei_EnemyPos.transform.Find("keiEnemyA1").GetComponent<Image>();
+        keiPositionIntel[0][1] = kei_EnemyPos.transform.Find("keiEnemyB1").GetComponent<Image>();
+        keiPositionIntel[0][2] = kei_EnemyPos.transform.Find("keiEnemyC1").GetComponent<Image>();
 
-        keiPositionIntel[3] = kei_EnemyPos.transform.Find("keiEnemyB1").GetComponent<Image>();
-        keiPositionIntel[4] = kei_EnemyPos.transform.Find("keiEnemyB2").GetComponent<Image>();
-        keiPositionIntel[5] = kei_EnemyPos.transform.Find("keiEnemyB3").GetComponent<Image>();
+        keiPositionIntel[1][0] = kei_EnemyPos.transform.Find("keiEnemyA2").GetComponent<Image>();
+        keiPositionIntel[1][1] = kei_EnemyPos.transform.Find("keiEnemyB2").GetComponent<Image>();
+        keiPositionIntel[1][2] = kei_EnemyPos.transform.Find("keiEnemyC2").GetComponent<Image>();
 
-        keiPositionIntel[6] = kei_EnemyPos.transform.Find("keiEnemyC1").GetComponent<Image>();
-        keiPositionIntel[7] = kei_EnemyPos.transform.Find("keiEnemyC2").GetComponent<Image>();
-        keiPositionIntel[8] = kei_EnemyPos.transform.Find("keiEnemyC3").GetComponent<Image>();
+        keiPositionIntel[2][0] = kei_EnemyPos.transform.Find("keiEnemyA3").GetComponent<Image>();
+        keiPositionIntel[2][1] = kei_EnemyPos.transform.Find("keiEnemyB3").GetComponent<Image>();
+        keiPositionIntel[2][2] = kei_EnemyPos.transform.Find("keiEnemyC3").GetComponent<Image>();
 
         keiCheckElemEnemy(keiPositionIntel, kei_SmartAuto);
 
     }
 
-    public void keiCheckElemEnemy(Image[] kei_PositionIntel, keiSmartAutoController kei_SmartAuto)
+    public void keiCheckElemEnemy(Image[][] kei_PositionIntel, keiSmartAutoController kei_SmartAuto)
     {
         keiEnemyCounted = 0;
 
-        for (int i = 0; i < kei_PositionIntel.Length; i++)
+        for (int keiCol = 0; keiCol < 3; keiCol++)
         {
-            if (kei_PositionIntel[i].color != Color.white)
+            for (int keiRow = 0; keiRow < 3; keiRow++)
             {
-                // Check and input intel based on color
-                if (kei_PositionIntel[i].color == Color.red)
+                if (kei_PositionIntel[keiCol][keiRow].color != Color.white)
                 {
-                    kei_SmartAuto.keiEnemyElemIntel[i] = 1;
-                    kei_SmartAuto.keiEnemyCountDownIntel[i] = keiCheckTypeEnemy(kei_PositionIntel[i], kei_SmartAuto);
-                    keiIsEnemyStillAlive = true;
-                    keiEnemyCounted++;
-                    continue;
+                    // Check and input intel based on enemy color and turns
+                    if (kei_PositionIntel[keiCol][keiRow].color == Color.red)
+                    {
+                        kei_SmartAuto.keiEnemyIntel[keiCol][keiRow][0] = 1;
+                        kei_SmartAuto.keiEnemyIntel[keiCol][keiRow][1] = int.Parse(kei_PositionIntel[keiCol][keiRow].gameObject.transform.GetChild(0).GetComponent<Text>().text);
+                        keiIsEnemyStillAlive = true;
+                        keiEnemyCounted++;
 
-                }
-                else if (kei_PositionIntel[i].color == Color.cyan)
-                {
-                    kei_SmartAuto.keiEnemyElemIntel[i] = 2;
-                    kei_SmartAuto.keiEnemyCountDownIntel[i] = keiCheckTypeEnemy(kei_PositionIntel[i], kei_SmartAuto);
-                    keiIsEnemyStillAlive = true;
-                    keiEnemyCounted++;
-                    continue;
+                    }
+                    else if (kei_PositionIntel[keiCol][keiRow].color == Color.cyan)
+                    {
+                        kei_SmartAuto.keiEnemyIntel[keiCol][keiRow][0] = 2;
+                        kei_SmartAuto.keiEnemyIntel[keiCol][keiRow][1] = int.Parse(kei_PositionIntel[keiCol][keiRow].gameObject.transform.GetChild(0).GetComponent<Text>().text);
+                        keiIsEnemyStillAlive = true;
+                        keiEnemyCounted++;
 
-                }
-                else if (kei_PositionIntel[i].color == Color.green)
-                {
-                    kei_SmartAuto.keiEnemyElemIntel[i] = 3;
-                    kei_SmartAuto.keiEnemyCountDownIntel[i] = keiCheckTypeEnemy(kei_PositionIntel[i], kei_SmartAuto);
-                    keiIsEnemyStillAlive = true;
-                    keiEnemyCounted++;
-                    continue;
+                    }
+                    else if (kei_PositionIntel[keiCol][keiRow].color == Color.green)
+                    {
+                        kei_SmartAuto.keiEnemyIntel[keiCol][keiRow][0] = 3;
+                        kei_SmartAuto.keiEnemyIntel[keiCol][keiRow][1] = int.Parse(kei_PositionIntel[keiCol][keiRow].gameObject.transform.GetChild(0).GetComponent<Text>().text);
+                        keiIsEnemyStillAlive = true;
+                        keiEnemyCounted++;
 
-                }
-                else if (kei_PositionIntel[i].color == Color.yellow)
-                {
-                    kei_SmartAuto.keiEnemyElemIntel[i] = 4;
-                    kei_SmartAuto.keiEnemyCountDownIntel[i] = keiCheckTypeEnemy(kei_PositionIntel[i], kei_SmartAuto);
-                    keiIsEnemyStillAlive = true;
-                    keiEnemyCounted++;
-                    continue;
+                    }
+                    else if (kei_PositionIntel[keiCol][keiRow].color == Color.yellow)
+                    {
+                        kei_SmartAuto.keiEnemyIntel[keiCol][keiRow][0] = 4;
+                        kei_SmartAuto.keiEnemyIntel[keiCol][keiRow][1] = int.Parse(kei_PositionIntel[keiCol][keiRow].gameObject.transform.GetChild(0).GetComponent<Text>().text);
+                        keiIsEnemyStillAlive = true;
+                        keiEnemyCounted++;
 
-                }
-                else if (kei_PositionIntel[i].color == Color.magenta)
-                {
-                    kei_SmartAuto.keiEnemyElemIntel[i] = 5;
-                    kei_SmartAuto.keiEnemyCountDownIntel[i] = keiCheckTypeEnemy(kei_PositionIntel[i], kei_SmartAuto);
-                    keiIsEnemyStillAlive = true;
-                    keiEnemyCounted++;
-                    continue;
+                    }
+                    else if (kei_PositionIntel[keiCol][keiRow].color == Color.magenta)
+                    {
+                        kei_SmartAuto.keiEnemyIntel[keiCol][keiRow][0] = 5;
+                        kei_SmartAuto.keiEnemyIntel[keiCol][keiRow][1] = int.Parse(kei_PositionIntel[keiCol][keiRow].gameObject.transform.GetChild(0).GetComponent<Text>().text);
+                        keiIsEnemyStillAlive = true;
+                        keiEnemyCounted++;
+
+                    }
 
                 }
                 else
                 {
-                    kei_SmartAuto.keiEnemyElemIntel[i] = 6;
-                    kei_SmartAuto.keiEnemyCountDownIntel[i] = keiCheckTypeEnemy(kei_PositionIntel[i], kei_SmartAuto);
-                    keiIsEnemyStillAlive = true;
-                    keiEnemyCounted++;
-                    continue;
+                    kei_SmartAuto.keiEnemyIntel[keiCol][keiRow][0] = 0;
+                    kei_SmartAuto.keiEnemyIntel[keiCol][keiRow][1] = int.Parse(kei_PositionIntel[keiCol][keiRow].gameObject.transform.GetChild(0).GetComponent<Text>().text);
 
                 }
 
-            }
-            else
-            {
-                kei_SmartAuto.keiEnemyElemIntel[i] = 0;
-                kei_SmartAuto.keiEnemyCountDownIntel[i] = 0;
-                continue;
+                //Debug.Log("Col: " + keiCol +
+                //    " | Row: " + keiRow +
+                //    " | EnemyElem: " + kei_SmartAuto.keiEnemyIntel[keiCol][keiRow][0] +
+                //    " | EnemyTurn: " + kei_SmartAuto.keiEnemyIntel[keiCol][keiRow][1]);
 
             }
 
         }
+
+        /// <Deprecated>
+        /// for (int i = 0; i < kei_PositionIntel.Length; i++)
+        ///{
+        ///    if (kei_PositionIntel[i].color != Color.white)
+        ///    {
+        ///        // Check and input intel based on color
+        ///       if (kei_PositionIntel[i].color == Color.red)
+        ///        {
+        ///            kei_SmartAuto.keiEnemyElemIntel[i] = 1;
+        ///            kei_SmartAuto.keiEnemyCountDownIntel[i] = keiCheckTypeEnemy(kei_PositionIntel[i], kei_SmartAuto);
+        ///            keiIsEnemyStillAlive = true;
+        ///            keiEnemyCounted++;
+        ///            continue;
+        ///            
+        ///        }
+        ///        else if (kei_PositionIntel[i].color == Color.cyan)
+        ///        {
+        ///            kei_SmartAuto.keiEnemyElemIntel[i] = 2;
+        ///            kei_SmartAuto.keiEnemyCountDownIntel[i] = keiCheckTypeEnemy(kei_PositionIntel[i], kei_SmartAuto);
+        ///            keiIsEnemyStillAlive = true;
+        ///            keiEnemyCounted++;
+        ///            continue;
+        ///
+        ///        }
+        ///        else if (kei_PositionIntel[i].color == Color.green)
+        ///        {
+        ///            kei_SmartAuto.keiEnemyElemIntel[i] = 3;
+        ///            kei_SmartAuto.keiEnemyCountDownIntel[i] = keiCheckTypeEnemy(kei_PositionIntel[i], kei_SmartAuto);
+        ///            keiIsEnemyStillAlive = true;
+        ///            keiEnemyCounted++;
+        ///            continue;
+        ///
+        ///        }
+        ///        else if (kei_PositionIntel[i].color == Color.yellow)
+        ///        {
+        ///            kei_SmartAuto.keiEnemyElemIntel[i] = 4;
+        ///            kei_SmartAuto.keiEnemyCountDownIntel[i] = keiCheckTypeEnemy(kei_PositionIntel[i], kei_SmartAuto);
+        ///            keiIsEnemyStillAlive = true;
+        ///            keiEnemyCounted++;
+        ///            continue;
+        ///
+        ///        }
+        ///        else if (kei_PositionIntel[i].color == Color.magenta)
+        ///        {
+        ///            kei_SmartAuto.keiEnemyElemIntel[i] = 5;
+        ///            kei_SmartAuto.keiEnemyCountDownIntel[i] = keiCheckTypeEnemy(kei_PositionIntel[i], kei_SmartAuto);
+        ///            keiIsEnemyStillAlive = true;
+        ///            keiEnemyCounted++;
+        ///            continue;
+        ///
+        ///        }
+        ///        else
+        ///        {
+        ///            kei_SmartAuto.keiEnemyElemIntel[i] = 6;
+        ///            kei_SmartAuto.keiEnemyCountDownIntel[i] = keiCheckTypeEnemy(kei_PositionIntel[i], kei_SmartAuto);
+        ///            keiIsEnemyStillAlive = true;
+        ///            keiEnemyCounted++;
+        ///            continue;
+        ///
+        ///        }
+        ///
+        ///    }
+        ///    else
+        ///    {
+        ///        kei_SmartAuto.keiEnemyElemIntel[i] = 0;
+        ///        kei_SmartAuto.keiEnemyCountDownIntel[i] = 0;
+        ///        continue;
+        ///
+        ///    }
+        ///
+        ///}
+        /// </Deprecated>
 
         //kei_SmartAuto.keiIntelChecker();
         kei_SmartAuto.keiIsFinished = true;

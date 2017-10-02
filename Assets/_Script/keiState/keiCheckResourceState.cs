@@ -1,14 +1,16 @@
 ﻿/// <summary>
-/// keiCheckResourceState V1.1
+/// keiCheckResourceState V1.2
 /// Kei Lazu
 /// 
 /// Desc;
 /// Check Resource that we give
-/// Input: 
+/// Input: Player Resources
+/// Output: Data player resources filled
 /// 
 /// - Second State
 /// 
 /// Changelog:
+/// 1.2 - Change Output source to more reliable source
 /// 1.1 - Can now add resource into smart auto control
 /// 
 /// </summary>
@@ -82,7 +84,7 @@ public class keiCheckResourceState : keiState<keiSmartAutoController>
     {
         if (kei_Owner.keiIsFinished)
         {
-            kei_Owner.keiStateMachine.keiChangeState(keiPrioritizeState.kei_getsetInstance);
+            kei_Owner.keiStateMachine.keiChangeState(keiPrioritizeStateV2.kei_getsetInstance);
 
         } else
         {
@@ -95,17 +97,18 @@ public class keiCheckResourceState : keiState<keiSmartAutoController>
 
     public void keiCheckingResource(keiInitializatorGameObject kei_Init, keiSmartAutoController kei_SmartAuto)
     {
-        kei_SmartAuto.keiPlayerTypeResource[0] = kei_Init.keiDropResTypeSlot1.value;
-        kei_SmartAuto.keiPlayerTypeResource[1] = kei_Init.keiDropResTypeSlot2.value;
-        kei_SmartAuto.keiPlayerTypeResource[2] = kei_Init.keiDropResTypeSlot3.value;
-        kei_SmartAuto.keiPlayerTypeResource[3] = kei_Init.keiDropResTypeSlot4.value;
-        kei_SmartAuto.keiPlayerTypeResource[4] = kei_Init.keiDropResTypeSlot5.value;
 
-        kei_SmartAuto.keiPlayerElemResource[0] = kei_Init.keiDropResElemSlot1.value;
-        kei_SmartAuto.keiPlayerElemResource[1] = kei_Init.keiDropResElemSlot2.value;
-        kei_SmartAuto.keiPlayerElemResource[2] = kei_Init.keiDropResElemSlot3.value;
-        kei_SmartAuto.keiPlayerElemResource[3] = kei_Init.keiDropResElemSlot4.value;
-        kei_SmartAuto.keiPlayerElemResource[4] = kei_Init.keiDropResElemSlot5.value;
+        kei_SmartAuto.keiPlayerResource[0][0] = kei_Init.keiDropResTypeSlot1.value;
+        kei_SmartAuto.keiPlayerResource[1][0] = kei_Init.keiDropResTypeSlot2.value;
+        kei_SmartAuto.keiPlayerResource[2][0] = kei_Init.keiDropResTypeSlot3.value;
+        kei_SmartAuto.keiPlayerResource[3][0] = kei_Init.keiDropResTypeSlot4.value;
+        kei_SmartAuto.keiPlayerResource[4][0] = kei_Init.keiDropResTypeSlot5.value;
+
+        kei_SmartAuto.keiPlayerResource[0][1] = kei_Init.keiDropResElemSlot1.value;
+        kei_SmartAuto.keiPlayerResource[1][1] = kei_Init.keiDropResElemSlot2.value;
+        kei_SmartAuto.keiPlayerResource[2][1] = kei_Init.keiDropResElemSlot3.value;
+        kei_SmartAuto.keiPlayerResource[3][1] = kei_Init.keiDropResElemSlot4.value;
+        kei_SmartAuto.keiPlayerResource[4][1] = kei_Init.keiDropResElemSlot5.value;
 
         //kei_SmartAuto.keiIntelChecker();
         kei_SmartAuto.keiIsFinished = true;

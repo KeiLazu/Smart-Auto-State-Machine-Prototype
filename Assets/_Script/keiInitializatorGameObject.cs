@@ -15,6 +15,7 @@ public class keiInitializatorGameObject : MonoBehaviour
     public GameObject keiWaveControlSystem;
     public GameObject keiEnemyPos;
     public GameObject keiPlayerResource;
+    public GameObject keiNatureRules;
 
     // Region: Image
     public Image keiEnemyA1, keiEnemyA2, keiEnemyA3,
@@ -41,6 +42,7 @@ public class keiInitializatorGameObject : MonoBehaviour
         keiEnemyPos = GameObject.FindGameObjectWithTag("keiEnemyPos");
         keiPlayerResource = GameObject.FindGameObjectWithTag("keiPlayerResource");
         keiWaveControlSystem = GameObject.Find("keiWaveControlScript");
+        keiNatureRules = GameObject.Find("keiNatureRules");
 
         // Region: Logging
         keiInitLogging(keiLogSystem);
