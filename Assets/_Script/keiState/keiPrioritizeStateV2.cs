@@ -67,7 +67,7 @@ public class keiPrioritizeStateV2 : keiState<keiSmartAutoController> {
 
         keiInitScript.keiLblLogState.GetComponent<Text>().text = "State: Prioritizing";
 
-        keiCheckAoEX(kei_Owner);
+        keiPriorityPos(kei_Owner);
 
     }
 
@@ -156,7 +156,23 @@ public class keiPrioritizeStateV2 : keiState<keiSmartAutoController> {
 
     }
 
-    // Phase 1: Check AoE and X
+    // Phase 1.1: Primary Position
+    public void keiPriorityPos(keiSmartAutoController kei_SmartAuto)
+    {
+        for (int keiCol = 0; keiCol < 3; keiCol++)
+        {
+            for (int keiRow = 0; keiRow < 3; keiRow++)
+            {
+                // TODO: get First Priority, Second Priority, and Third Priority
+                Debug.Log("Type: " + kei_SmartAuto.keiEnemyIntel[keiCol][keiRow][0] + "\nTurn: " + kei_SmartAuto.keiEnemyIntel[keiCol][keiRow][1] + "\nCol: " + keiCol + "\nRow: " + keiRow);
+
+            }
+
+        }
+
+    }
+
+    // Phase 2: Check AoE and X
     public void keiCheckAoEX(keiSmartAutoController kei_SmartAuto)
     {
         for (int i = 0; i < kei_SmartAuto.keiPlayerResource.Length; i++)
@@ -165,8 +181,8 @@ public class keiPrioritizeStateV2 : keiState<keiSmartAutoController> {
             {
                 case 3:
 
-                    
-                    continue;
+
+                    break;
 
                 case 4:
                     keiCheckEnemyColor(kei_SmartAuto);
@@ -185,47 +201,65 @@ public class keiPrioritizeStateV2 : keiState<keiSmartAutoController> {
                     switch (keiBenefitParam)
                     {
                         case 1:
-                            if (kei_SmartAuto.keiPlayerResource[i][1] != 2)
+                            if (kei_SmartAuto.keiPlayerResource[i][1] != 2 && keiTotalColor > 4)
                             {
                                 // suggest
 
                             }
-                            continue;
+                            break;
 
                         case 2:
-                            if (kei_SmartAuto.keiPlayerResource[i][1] != 0)
+                            if (kei_SmartAuto.keiPlayerResource[i][1] != 0 && keiTotalColor > 4)
                             {
                                 // suggest
 
                             }
-                            continue;
+                            break;
 
                         case 3:
-                            if (kei_SmartAuto.keiPlayerResource[i][1] != 1)
+                            if (kei_SmartAuto.keiPlayerResource[i][1] != 1 && keiTotalColor > 4)
                             {
                                 // suggest
 
                             }
-                            continue;
+                            break;
 
                         case 4:
                             // suggest
-                            continue;
+                            break;
 
                         case 5:
                             // suggest
-                            continue;
+                            break;
 
                     }
 
-                    continue;
+                    break;
 
                 default:
-                    continue;
+                    break;
 
             }
 
         }
+
+        if (kei_SmartAuto.keiDecisionAttack == 9)
+        {
+            keiCheckColRow(kei_SmartAuto);
+
+        }
+        else
+        {
+            // TODO: finish, and attack
+
+        }
+
+    }
+
+    // Phase 3: Check Col and Row
+    public void keiCheckColRow(keiSmartAutoController kei_SmartAuto)
+    {
+        // TODO: Check Col and Row, if any compare element, if none run to single
 
     }
 

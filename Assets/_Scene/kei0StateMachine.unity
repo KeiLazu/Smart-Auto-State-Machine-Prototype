@@ -4270,8 +4270,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   keiEnemyElemIntel: 000000000000000000000000000000000000000000000000000000000000000000000000
   keiEnemyCountDownIntel: 000000000000000000000000000000000000000000000000000000000000000000000000
-  keiPlayerTypeResource: 0000000000000000000000000000000000000000
-  keiPlayerElemResource: 0000000000000000000000000000000000000000
   keiDecisionAttackRow: 0
   keiDecisionAttackCol: 0
   keiDecisionAttackSlot: 0
@@ -7051,7 +7049,7 @@ MonoBehaviour:
   m_CaptionImage: {fileID: 0}
   m_ItemText: {fileID: 2015735909}
   m_ItemImage: {fileID: 0}
-  m_Value: 0
+  m_Value: 4
   m_Options:
     m_Options:
     - m_Text: Single
@@ -11483,7 +11481,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Single
+  m_Text: AoE
 --- !u!222 &1718393253
 CanvasRenderer:
   m_ObjectHideFlags: 0
