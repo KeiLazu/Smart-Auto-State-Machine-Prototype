@@ -1,9 +1,12 @@
 ﻿/// <summary>
-/// keiPrioritizeStateV2 V 2.0
+/// keiPrioritizeStateV2 V 2.1
 /// Kei Lazu
 /// 
 /// Desc:
 /// Prioritizing redefined
+/// 
+/// Changelog:
+/// 2.1: Multilayer Priority (Planning)
 /// 
 /// </summary>
 
@@ -49,10 +52,19 @@ public class keiPrioritizeStateV2 : keiState<keiSmartAutoController> {
 
     // Region: Position
     int keiEnemyTotalRed, keiEnemyTotalBlue, keiEnemyTotalGreen, keiEnemyTotalYellow, keiEnemyTotalMagenta;
+    int keiFPCol, keiFPRow, keiFPTurn; // First Priority
+    int keiSPCol, keiSPRow, keiSPTurn; // Second Priority
+    int keiTPCol, keiTPRow, keiTPTurn; // Third Priority
 
     // Region: Judgement
     int keiTotalColor;
     int keiSelectColor;
+
+    // Init Col Row Merit System
+    //int keiColMerit = new int();
+    //int keiRowMerit = new int();
+    //int keiColDemerit = new int();
+    //int keiRowDemerit = new int();
 
     // End Init
 
@@ -156,19 +168,81 @@ public class keiPrioritizeStateV2 : keiState<keiSmartAutoController> {
 
     }
 
-    // Phase 1.1: Primary Position
+    // Phase 1.1: Primary Position (clear)
     public void keiPriorityPos(keiSmartAutoController kei_SmartAuto)
     {
+        // emptying turn
+        keiFPTurn = 9;
+        keiSPTurn = 9;
+        keiTPTurn = 9;
+
+        //// for Col Row Merit System
+        //keiColMerit = 0;
+        //keiRowMerit = 0;
+        //keiColDemerit = 0;
+        //keiRowDemerit = 0;
+
         for (int keiCol = 0; keiCol < 3; keiCol++)
         {
             for (int keiRow = 0; keiRow < 3; keiRow++)
             {
-                // TODO: get First Priority, Second Priority, and Third Priority
-                Debug.Log("Type: " + kei_SmartAuto.keiEnemyIntel[keiCol][keiRow][0] + "\nTurn: " + kei_SmartAuto.keiEnemyIntel[keiCol][keiRow][1] + "\nCol: " + keiCol + "\nRow: " + keiRow);
+                //Debug.Log("Type: " + kei_SmartAuto.keiEnemyIntel[keiCol][keiRow][0] + "\nTurn: " + kei_SmartAuto.keiEnemyIntel[keiCol][keiRow][1] + "\nCol: " + keiCol + "\nRow: " + keiRow);
+
+                if (kei_SmartAuto.keiEnemyIntel[keiCol][keiRow][0] > 0)
+                {
+
+                    if (keiFPTurn > kei_SmartAuto.keiEnemyIntel[keiCol][keiRow][1])
+                    {
+                        // shift turn
+                        keiTPTurn = keiSPTurn;
+                        keiSPTurn = keiFPTurn;
+                        keiFPTurn = kei_SmartAuto.keiEnemyIntel[keiCol][keiRow][1];
+
+                        // shift pos
+                        keiTPCol = keiSPCol;
+                        keiTPRow = keiSPRow;
+
+                        keiSPCol = keiFPCol;
+                        keiSPRow = keiFPRow;
+
+                        keiFPCol = keiCol;
+                        keiFPRow = keiRow;
+
+                        //Debug.Log("FPCol: " + keiCol + " | FPRow: " + keiRow);
+                        //Debug.Log("First Priority: " + keiFPTurn + " | Second Priority: " + keiSPTurn + " | Third Priority: " + keiTPTurn);
+                        continue;
+
+                    }
+                    else if (keiSPTurn > kei_SmartAuto.keiEnemyIntel[keiCol][keiRow][1])
+                    {
+                        // shift turn
+                        keiTPTurn = keiSPTurn;
+                        keiSPTurn = kei_SmartAuto.keiEnemyIntel[keiCol][keiRow][1];
+
+                        // shift pos
+                        keiTPCol = keiSPCol;
+                        keiTPRow = keiSPRow;
+
+                        keiSPCol = keiCol;
+                        keiSPRow = keiRow;
+
+                        //Debug.Log("SPCol: " + keiCol + " | SPRow: " + keiRow);
+                        //Debug.Log("Second Priority: " + keiSPTurn + " | Third Priority: " + keiTPTurn);
+                        continue;
+
+                    }
+
+                }
 
             }
 
         }
+
+        Debug.Log("FPPos: " + keiFPCol + ":" + keiFPRow + " FPTurn: " + keiFPTurn +
+            "\nSPPos: " + keiSPCol + ":" + keiSPRow + " SPTurn: " + keiSPTurn + 
+            "\nTPPos: " + keiTPCol + ":" + keiTPRow + " TPTurn: " + keiTPTurn);
+
+        keiCheckAoEX(kei_SmartAuto);
 
     }
 
@@ -177,62 +251,15 @@ public class keiPrioritizeStateV2 : keiState<keiSmartAutoController> {
     {
         for (int i = 0; i < kei_SmartAuto.keiPlayerResource.Length; i++)
         {
+
             switch (kei_SmartAuto.keiPlayerResource[i][0])
             {
                 case 3:
 
-
                     break;
 
                 case 4:
-                    keiCheckEnemyColor(kei_SmartAuto);
-
-                    int keiBenefitParam = new int();
-
-                    keiBenefitParam = keiManyEnemyColor(keiEnemyTotalRed,
-                                                            keiEnemyTotalBlue,
-                                                            keiEnemyTotalGreen,
-                                                            keiEnemyTotalYellow,
-                                                            keiEnemyTotalMagenta,
-                                                            kei_SmartAuto);
-
-                    // Red(0) <- Blue(1) <- Green(2) <- Red(0)
-
-                    switch (keiBenefitParam)
-                    {
-                        case 1:
-                            if (kei_SmartAuto.keiPlayerResource[i][1] != 2 && keiTotalColor > 4)
-                            {
-                                // suggest
-
-                            }
-                            break;
-
-                        case 2:
-                            if (kei_SmartAuto.keiPlayerResource[i][1] != 0 && keiTotalColor > 4)
-                            {
-                                // suggest
-
-                            }
-                            break;
-
-                        case 3:
-                            if (kei_SmartAuto.keiPlayerResource[i][1] != 1 && keiTotalColor > 4)
-                            {
-                                // suggest
-
-                            }
-                            break;
-
-                        case 4:
-                            // suggest
-                            break;
-
-                        case 5:
-                            // suggest
-                            break;
-
-                    }
+                    keiAoESystem(kei_SmartAuto, i);
 
                     break;
 
@@ -248,11 +275,146 @@ public class keiPrioritizeStateV2 : keiState<keiSmartAutoController> {
             keiCheckColRow(kei_SmartAuto);
 
         }
-        else
+
+    }
+
+    // (Helper) Phase 2.1: Aoe Intensifies
+    public void keiAoESystem(keiSmartAutoController kei_SmartAuto, int keiIFromFor)
+    {
+        keiCheckEnemyColor(kei_SmartAuto);
+
+        int keiBenefitParam = new int();
+
+        keiBenefitParam = keiManyEnemyColor(keiEnemyTotalRed,
+                                                keiEnemyTotalBlue,
+                                                keiEnemyTotalGreen,
+                                                keiEnemyTotalYellow,
+                                                keiEnemyTotalMagenta,
+                                                kei_SmartAuto);
+
+        // Red(0) <- Blue(1) <- Green(2) <- Red(0)
+
+        //Debug.Log(keiBenefitParam + " is Benefit Param for this wave");
+
+        switch (keiBenefitParam)
         {
-            // TODO: finish, and attack
+            case 1:
+                if (kei_SmartAuto.keiPlayerResource[keiIFromFor][1] != 2 && keiTotalColor > 4)
+                {
+                    // suggest
+                    Debug.Log("Check Case 1 Benefit param");
+                    kei_SmartAuto.keiDecisionAttack = 4;
+                    kei_SmartAuto.keiDecisionAttackSlot = keiIFromFor;
+
+                }
+
+                break;
+
+            case 2:
+                if (kei_SmartAuto.keiPlayerResource[keiIFromFor][1] != 0 && keiTotalColor > 4)
+                {
+                    // suggest
+                    Debug.Log("Check Case 2 Benefit Param");
+                    kei_SmartAuto.keiDecisionAttack = 4;
+                    kei_SmartAuto.keiDecisionAttackSlot = keiIFromFor;
+
+                }
+
+                break;
+
+            case 3:
+                if (kei_SmartAuto.keiPlayerResource[keiIFromFor][1] != 1 && keiTotalColor > 4)
+                {
+                    // suggest
+                    Debug.Log("Check Case 3 Benefit Param");
+                    kei_SmartAuto.keiDecisionAttack = 4;
+                    kei_SmartAuto.keiDecisionAttackSlot = keiIFromFor;
+
+                }
+
+                break;
+
+            case 4:
+                // suggest
+                Debug.Log("Check Case 4 Benefit Param");
+                kei_SmartAuto.keiDecisionAttack = 4;
+                kei_SmartAuto.keiDecisionAttackSlot = keiIFromFor;
+
+                break;
+
+            case 5:
+                // suggest
+                Debug.Log("Check Case 5 Benefit Param");
+                kei_SmartAuto.keiDecisionAttack = 4;
+                kei_SmartAuto.keiDecisionAttackSlot = keiIFromFor;
+
+                break;
+
+            default:
+                break;
 
         }
+
+    }
+
+    // (Helper) Phase 3.1: Col and Row Calculator
+    public void keiColRowDecision(keiSmartAutoController kei_SmartAuto, int keiLimiterElement, int keiSwitcher, int keiSlotResource)
+    {
+        int keiMeritRow = new int();
+        keiMeritRow = 0;
+
+        switch (keiSwitcher)
+        {
+            case 0:
+                for (int keiCheckCol = 0; keiCheckCol < 3; keiCheckCol++)
+                {
+                    if (kei_SmartAuto.keiEnemyIntel[keiCheckCol][keiFPRow][0] > 0 && kei_SmartAuto.keiEnemyIntel[keiCheckCol][keiFPRow][0] != keiLimiterElement)
+                    {
+                        keiMeritRow++;
+
+                    }
+
+                }
+
+                if (keiMeritRow >= 2)
+                {
+                    // Suggest
+                    Debug.Log("Suggesting Slot: " + (keiSlotResource + 1));
+                    kei_SmartAuto.keiDecisionAttack = 1;
+                    kei_SmartAuto.keiDecisionAttackSlot = keiSlotResource + 1;
+
+                }
+
+                Debug.Log(keiMeritRow);
+                break;
+
+            case 1:
+                for (int keiCheckRow = 0; keiCheckRow < 3; keiCheckRow++)
+                {
+                    if (kei_SmartAuto.keiEnemyIntel[keiFPCol][keiCheckRow][0] > 0 && kei_SmartAuto.keiEnemyIntel[keiFPCol][keiCheckRow][0] != keiLimiterElement)
+                    {
+                        keiMeritRow++;
+
+                    }
+
+                }
+
+                if (keiMeritRow >= 2)
+                {
+                    // Suggest
+                    Debug.Log("Suggesting Slot: " + (keiSlotResource + 1));
+                    kei_SmartAuto.keiDecisionAttack = 1;
+                    kei_SmartAuto.keiDecisionAttackSlot = keiSlotResource + 1;
+
+                }
+
+                Debug.Log(keiMeritRow);
+                break;
+
+            default:
+                break;
+        }
+
 
     }
 
@@ -260,6 +422,92 @@ public class keiPrioritizeStateV2 : keiState<keiSmartAutoController> {
     public void keiCheckColRow(keiSmartAutoController kei_SmartAuto)
     {
         // TODO: Check Col and Row, if any compare element, if none run to single
+        for (int i = 0; i < kei_SmartAuto.keiPlayerResource.Length; i++)
+        {
+            switch (kei_SmartAuto.keiPlayerResource[i][0])
+            {
+                case 1:
+                    // Row
+                    switch (kei_SmartAuto.keiPlayerResource[i][1])
+                    {
+                        case 0:
+                            // Fire
+                            keiColRowDecision(kei_SmartAuto, 2, 0, i);
+
+                            break;
+
+                        case 1:
+                            // Water
+                            keiColRowDecision(kei_SmartAuto, 3, 0, i);
+
+                            break;
+
+                        case 2:
+                            // Earth
+                            keiColRowDecision(kei_SmartAuto, 1, 0, i);
+
+                            break;
+
+                        case 3:
+                            // Light
+                            keiColRowDecision(kei_SmartAuto, 0, 0, i);
+
+                            break;
+
+                        case 4:
+                            // Dark
+                            keiColRowDecision(kei_SmartAuto, 0, 0, i);
+
+                            break;
+
+                        default:
+                            break;
+
+                    }
+
+                    break;
+
+                case 2:
+                    // Col
+                    switch (kei_SmartAuto.keiPlayerResource[i][1])
+                    {
+                        case 0:
+                            // Fire
+
+                            break;
+
+                        case 1:
+                            // Water
+
+                            break;
+
+                        case 2:
+                            // Earth
+
+                            break;
+
+                        case 3:
+                            // Light
+
+                            break;
+
+                        case 4:
+                            // Dark
+
+                            break;
+
+                        default:
+                            break;
+                    }
+
+                    break;
+
+                default:
+                    break;
+
+            }
+
+        }
 
     }
 
